@@ -8,7 +8,7 @@ LINKED_LIBRARIES = -lm -lrt
 
 # The names of the .c files to compile
 EMITTER_FILES = $(SRC_DIR)/emitter/emitter.c $(SRC_DIR)/control/control.c $(SRC_DIR)/util/flags.c
-RECEPTOR_FILES = $(SRC_DIR)/receptor/receptor.c 
+RECEPTOR_FILES = $(SRC_DIR)/receptor/receptor.c $(SRC_DIR)/control/control.c $(SRC_DIR)/util/flags.c
 
 make: ${FILES}
 	@mkdir -p $(BIN_DIR)

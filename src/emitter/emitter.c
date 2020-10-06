@@ -70,8 +70,9 @@ int main(int argc, char **argv) {
 
     printf("New termios structure set\n");
 
-    //start_emitter(fd);
+    start_emitter(fd);
 
+    printf("Sent packet\n");
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
         exit(-1);
