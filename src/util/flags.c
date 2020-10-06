@@ -2,7 +2,7 @@
 
 char DELIMITER_FLAG = 0x7e;
 
-char EMISSOR_ADDRESS = 0x03;
+char EMITTER_ADDRESS = 0x03;
 
 char RECEPTOR_ADDRESS = 0x01;
 

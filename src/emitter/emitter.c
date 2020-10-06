@@ -1,8 +1,14 @@
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
+
+#include "../control/control.h"
+#include "../util/flags.h"
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -12,17 +18,18 @@
 
 volatile int STOP = FALSE;
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int fd, c, res;
     struct termios oldtio, newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
 
+    // TODO: remove serial port ttyS1[0, 1]. Only for virtual port test purposes.
     if ((argc < 2) ||
         ((strcmp("/dev/ttyS0", argv[1]) != 0) &&
-         (strcmp("/dev/ttyS1", argv[1]) != 0)))
-    {
+         (strcmp("/dev/ttyS1", argv[1]) != 0) &&
+         (strcmp("/dev/ttyS10", argv[1]) != 0) &&
+         (strcmp("/dev/ttyS11", argv[1]) != 0))) {
         printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
         exit(1);
     }
@@ -33,14 +40,12 @@ int main(int argc, char **argv)
      */
 
     fd = open(argv[1], O_RDWR | O_NOCTTY);
-    if (fd < 0)
-    {
+    if (fd < 0) {
         perror(argv[1]);
         exit(-1);
     }
 
-    if (tcgetattr(fd, &oldtio) == -1)
-    { /* save current port settings */
+    if (tcgetattr(fd, &oldtio) == -1) {
         perror("tcgetattr");
         exit(-1);
     }
@@ -53,30 +58,31 @@ int main(int argc, char **argv)
     /* Set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
-
-    /* 
-     * VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-     * leitura do(s) próximo(s) caracter(es)
-     */
+    newtio.c_cc[VTIME] = 0;
+    newtio.c_cc[VMIN] = 1;
 
     tcflush(fd, TCIOFLUSH);
 
-    if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-    {
+    if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
         perror("tcsetattr");
         exit(-1);
     }
 
     printf("New termios structure set\n");
 
-    if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
-    {
+    //start_emitter(fd);
+
+    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
         exit(-1);
     }
 
     close(fd);
     return 0;
+}
+
+void start_emitter(int filedes) {
+    // TODO: wrap this in a do while do not receive disconnect.
+
+    send_control_packet(filedes, build_control_packet(EMITTER_ADDRESS, CONTROL_SET));
 }
