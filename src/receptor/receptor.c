@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
-#include "../control/control.h"
+#include "../packet/packet.h"
 #include "../util/flags.h"
 
 

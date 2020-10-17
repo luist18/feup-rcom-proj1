@@ -4,14 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern char DELIMITER_FLAG;
-
-extern char EMITTER_ADDRESS;
-
-extern char RECEPTOR_ADDRESS;
-
-extern char CONTROL_SET;
-
-extern char CONTROL_UA;
+#define MAX_TIMEOUT_RETRIES 3
+#define DELIMITER_FLAG 0x7e
+#define EMITTER_ADDRESS 0x03
+#define RECEPTOR_ADDRESS 0x01
+#define CONTROL_SET 0x03
+#define CONTROL_UA 0x0b
 
 #endif
