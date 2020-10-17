@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BAUDRATE B38400
-
 /**
  * @brief The open type of llopen.
  */
@@ -43,6 +41,16 @@ int llopen(char *port, enum open_type open_type);
  * @return int      0 if success, a negative number otherwise
  */
 int llopen_emitter(int filedes);
+
+/**
+ * @brief Writes data in the file descriptor.
+ * 
+ * @param fd        the filedescriptor
+ * @param data      the data to send
+ * @param length    the length of the data buffer
+ * @return int      0 if success, a negative number otherwise
+ */
+int llwrite(int fd, char *data, int length);
 
 /**
  * @brief Closes a connection.

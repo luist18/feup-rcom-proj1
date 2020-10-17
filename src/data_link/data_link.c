@@ -14,6 +14,7 @@ struct termios oldtio, newtio;
 
 int retries = 3;
 int flag = 0;
+int sequence_number = 0;
 
 int llopen(char *port, enum open_type open_type) {
     int return_code, fd;
@@ -65,6 +66,38 @@ int llopen(char *port, enum open_type open_type) {
     return return_code;
 }
 
+int llwrite(int filedes, char *data, int length) {
+    // TODO: replace with a default number
+    retries = 3;
+
+    enum STATE state = START;
+
+    unsigned char *packet = build_information_packet(data, length, sequence_number);
+
+    do {
+        write(filedes, &packet, sizeof(packet));
+
+        alarm(3);
+
+        char byte;
+
+        flag = 0;
+
+        while (!flag && state != STOP) {
+            read(filedes, &byte, sizeof(byte));
+
+            // handle state for RR e REJ
+        }
+    } while (flag && retries <= MAX_TIMEOUT_RETRIES);
+
+    if (state != STOP) {
+        printf("Connection failed: timed out!\n");
+        return -1;
+    }
+
+    return 0;
+}
+
 int llclose(int fd) {
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
@@ -82,7 +115,7 @@ int llopen_emitter(int filedes) {
     // TODO: replace with a default number
     retries = 3;
 
-    enum STATE_UA state = START;
+    enum STATE state = START;
 
     control_packet packet = build_control_packet(EMITTER_ADDRESS, CONTROL_SET);
 
@@ -98,7 +131,7 @@ int llopen_emitter(int filedes) {
         while (!flag && state != STOP) {
             read(filedes, &byte, sizeof(byte));
 
-            handle_ua_state(&state, &byte, &packet);
+            handle_state(&state, &byte, RECEPTOR_ADDRESS, CONTROL_UA);
         }
     } while (flag && retries <= MAX_TIMEOUT_RETRIES);
 

@@ -13,7 +13,7 @@
 /**
  * @brief Enumerate for the UA state machine.
  */
-enum STATE_UA {
+enum STATE {
     START,
     FLAG_RCV,
     A_RCV,
@@ -27,9 +27,10 @@ enum STATE_UA {
  * 
  * @param current_state the current state
  * @param byte          the byte received
- * @param packet        the packet sent
+ * @param address       the address
+ * @param control_flag  the control flag
  */
-void handle_ua_state(enum STATE_UA *current_state, char *byte, control_packet *packet);
+void handle_state(enum STATE *current_state, char *byte, char address, char control_flag);
 
 /**
  * @brief Sets up the alarm handler. 
