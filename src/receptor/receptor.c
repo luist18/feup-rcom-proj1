@@ -1,56 +1,55 @@
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <stdio.h>
-#include "../packet/packet.h"
-#include "../util/flags.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
 
+#include "../data_link/packet/packet.h"
+#include "../util/flags.h"
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
 
-volatile int STOP=FALSE;
+volatile int STOP = FALSE;
 
-void printPacketInformation(control_packet* const packet ){
-    printf("Fields: \n" );
-    printf("I_Flag: 0x%02X\n",packet->I_FLAG );
-    printf("Address: 0x%02X\n",packet->ADDRESS );
-    printf("Control: 0x%02X\n",packet->CONTROL );
-    printf("Protection Field: 0x%02X\n",packet->PROTECTION_FIELD );
-    printf("F_Flag: 0x%02X\n",packet->F_FLAG );
+void printPacketInformation(control_packet* const packet) {
+    printf("Fields: \n");
+    printf("I_Flag: 0x%02X\n", packet->I_FLAG);
+    printf("Address: 0x%02X\n", packet->ADDRESS);
+    printf("Control: 0x%02X\n", packet->CONTROL);
+    printf("Protection Field: 0x%02X\n", packet->PROTECTION_FIELD);
+    printf("F_Flag: 0x%02X\n", packet->F_FLAG);
     printf("Done!\n");
 }
 
-
-int main(int argc, char** argv)
-{
-    int fd,c, res;
-    struct termios oldtio,newtio;
+int main(int argc, char** argv) {
+    int fd, c, res;
+    struct termios oldtio, newtio;
     char buf[255];
 
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS10", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS11", argv[1])!=0) )) {
-      printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
-      exit(1);
+    if ((argc < 2) ||
+        ((strcmp("/dev/ttyS10", argv[1]) != 0) &&
+         (strcmp("/dev/ttyS11", argv[1]) != 0))) {
+        printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
+        exit(1);
     }
 
-
-  /*
+    /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
   */
-  
-    
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
 
-    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
-      perror("tcgetattr");
-      exit(-1);
+    fd = open(argv[1], O_RDWR | O_NOCTTY);
+    if (fd < 0) {
+        perror(argv[1]);
+        exit(-1);
+    }
+
+    if (tcgetattr(fd, &oldtio) == -1) { /* save current port settings */
+        perror("tcgetattr");
+        exit(-1);
     }
 
     bzero(&newtio, sizeof(newtio));
@@ -61,28 +60,22 @@ int main(int argc, char** argv)
     /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
+    newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
 
-
-
-  /* 
+    /* 
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
     leitura do(s) pr�ximo(s) caracter(es)
   */
 
-
-
     tcflush(fd, TCIOFLUSH);
 
-    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
+    if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
+        perror("tcsetattr");
+        exit(-1);
     }
 
     printf("New termios structure set\n");
-
-
 
     /*=== GETTING SETUP MESSAGE! ===*/
 
@@ -104,47 +97,39 @@ int main(int argc, char** argv)
     control_packet packet;
     bzero(&packet, sizeof(packet));
 
-
     res = read(fd, &packet, sizeof(packet));
-    
+
     //TODO Delete this later on, printing information just to check if all is good
     printPacketInformation(&packet);
-
 
     //TODO possibly put this on a util function bool checkIfPacketIsValidSetUp or something
     //Field Verification
 
     //Checking FLAG
-    if (packet.I_FLAG != DELIMITER_FLAG){
+    if (packet.I_FLAG != DELIMITER_FLAG) {
         printf("FLAG is different. Invalid packet.\n");
         exit(1);
     }
-    if (packet.CONTROL != CONTROL_SET){
+    if (packet.CONTROL != CONTROL_SET) {
         printf("Packet is not of set up. Terminating!\n");
         exit(2);
     }
-    if (packet.PROTECTION_FIELD != (packet.ADDRESS ^ packet.CONTROL)){
+    if (packet.PROTECTION_FIELD != (packet.ADDRESS ^ packet.CONTROL)) {
         printf("Protection field is invalid. Terminating!\n");
         exit(3);
     }
     printf("Packet is valid!\n");
-    
-
 
     //At this point, packet is valid. Send UA to emitter to acknowledge he receival or set-up packet
-    send_control_packet(fd, build_control_packet(RECEPTOR_ADDRESS, CONTROL_UA));
+    control_packet r_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_UA);
+    write(fd, &r_packet, sizeof(r_packet));
     printf("Sent UA to emitter!\n");
 
-
-
-
-  /* 
+    /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no gui�o 
   */
 
-
-
-    tcsetattr(fd,TCSANOW,&oldtio);
+    tcsetattr(fd, TCSANOW, &oldtio);
     close(fd);
     return 0;
 }

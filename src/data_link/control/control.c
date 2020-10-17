@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "../../util/flags.h"
 #include "../packet/packet.h"
-#include "../util/flags.h"
 
-int retries = 0;
-int flag = 0;
+extern int retries;
+extern int flag;
 
 void handle_ua_state(enum STATE_UA *current_state, char *byte, control_packet *packet) {
     switch (*current_state) {
@@ -60,35 +60,4 @@ void alarm_handler(int sig) {
 
 void setup_handler() {
     (void)signal(SIGALRM, alarm_handler);
-}
-
-int start_emitter(int filedes) {
-    printf("Establishing connection with receptor...\n");
-
-    enum STATE_UA state = START;
-
-    control_packet packet = build_control_packet(EMITTER_ADDRESS, CONTROL_SET);
-
-    do {
-        send_control_packet(filedes, packet);
-
-        alarm(3);
-
-        char byte;
-
-        flag = 0;
-
-        while (!flag && state != STOP) {
-            read(filedes, &byte, sizeof(byte));
-
-            handle_ua_state(&state, &byte, &packet);
-        }
-    } while (flag && retries <= MAX_TIMEOUT_RETRIES);
-
-    if (state != STOP) {
-        printf("Connection failed: timed out!\n");
-        return -1;
-    }
-
-    return 0;
 }

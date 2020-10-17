@@ -7,7 +7,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "../protocol/protocol.h"
+#include "../data_link/data_link.h"
 
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */

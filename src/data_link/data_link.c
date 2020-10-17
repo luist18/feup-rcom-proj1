@@ -1,4 +1,4 @@
-#include "protocol.h"
+#include "data_link.h"
 
 #include <fcntl.h>
 #include <strings.h>
@@ -6,19 +6,20 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "../control/control.h"
+#include "../util/flags.h"
+#include "control/control.h"
+#include "packet/packet.h"
 
 struct termios oldtio, newtio;
+
+int retries = 3;
+int flag = 0;
 
 int llopen(char *port, enum open_type open_type) {
     int return_code, fd;
 
     switch (open_type) {
         case EMITTER:
-            /*
-             * Open serial port device for reading and writing and not as controlling tty
-             * because we don't want to get killed if linenoise sends CTRL-C.
-             */
             fd = open(port, O_RDWR | O_NOCTTY);
             if (fd < 0) {
                 perror(port);
@@ -49,7 +50,7 @@ int llopen(char *port, enum open_type open_type) {
 
             setup_handler();
 
-            if (start_emitter(fd) < 0)
+            if (llopen_emitter(fd) < 0)
                 return -1;
 
             printf("Connection established.\n");
@@ -71,6 +72,40 @@ int llclose(int fd) {
     }
 
     close(fd);
+
+    return 0;
+}
+
+int llopen_emitter(int filedes) {
+    printf("Establishing connection with receptor...\n");
+
+    // TODO: replace with a default number
+    retries = 3;
+
+    enum STATE_UA state = START;
+
+    control_packet packet = build_control_packet(EMITTER_ADDRESS, CONTROL_SET);
+
+    do {
+        write(filedes, &packet, sizeof(packet));
+
+        alarm(3);
+
+        char byte;
+
+        flag = 0;
+
+        while (!flag && state != STOP) {
+            read(filedes, &byte, sizeof(byte));
+
+            handle_ua_state(&state, &byte, &packet);
+        }
+    } while (flag && retries <= MAX_TIMEOUT_RETRIES);
+
+    if (state != STOP) {
+        printf("Connection failed: timed out!\n");
+        return -1;
+    }
 
     return 0;
 }
