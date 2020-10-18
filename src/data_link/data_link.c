@@ -48,6 +48,7 @@ int llopen(char *port, enum open_type open_type) {
                 perror("tcsetattr");
                 return -1;
             }
+            //TODO finished comparing until here
 
             setup_handler();
 
@@ -56,6 +57,46 @@ int llopen(char *port, enum open_type open_type) {
 
             printf("Connection established.\n");
             return_code = fd;
+            break;
+
+        case RECEPTOR:
+            fd = open(port, O_RDWR | O_NOCTTY);
+            if (fd < 0){
+                perror(port);
+                exit(-1);
+            }
+
+            if (tcgetattr(fd, &oldtio) == -1){ 
+                perror("tcgetattr");
+                exit(-1);
+            }
+
+            bzero(&newtio, sizeof(newtio));
+            newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+            newtio.c_iflag = IGNPAR;
+            newtio.c_oflag = 0;
+
+            /* set input mode (non-canonical, no echo,...) */
+            newtio.c_lflag = 0;
+
+            newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
+            newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+
+            tcflush(fd, TCIOFLUSH);
+
+            if (tcsetattr(fd, TCSANOW, &newtio) == -1){
+                perror("tcsetattr");
+                exit(-1);
+            }   
+
+            if (llopen_receptor(fd) < 0 ){
+                return -1;
+            }
+            return_code = fd;
+
+
+
+
             break;
 
         default:
@@ -108,6 +149,50 @@ int llclose(int fd) {
 
     return 0;
 }
+
+int llopen_receptor(int filedes){
+    printf("Awaiting connection establishment from receptor...\n");
+    
+    // TODO: replace with a default number
+    retries = 3;
+
+    enum STATE state = START;
+
+    
+
+    do{
+        char byte;
+        flag = 0;
+
+        while (!flag && state != STOP) {
+            read(filedes, &byte, sizeof(byte));
+
+            handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_SET);
+        }
+
+    } while (flag && retries <= MAX_TIMEOUT_RETRIES);
+
+
+    if (state != STOP){
+        printf("Connection failed. No vaild set up message was received!\n");
+        return -1;
+    }
+    else{
+        printf("Everything worked out perfectly. Going to write UA Message\n");
+    }
+
+
+    /*
+        TODO: Check what happens if sending UA fails. Might need to redo this part
+    */
+    control_packet ua_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_UA);
+    write(filedes, &ua_packet, sizeof(ua_packet));
+    
+    return 0;
+
+}
+
+
 
 int llopen_emitter(int filedes) {
     printf("Establishing connection with receptor...\n");

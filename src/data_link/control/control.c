@@ -17,7 +17,10 @@ void handle_state(enum STATE *current_state, char *byte, char address, char cont
             break;
 
         case FLAG_RCV:
-            *current_state = *byte == RECEPTOR_ADDRESS ? A_RCV : START;
+            if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = *byte == address ? A_RCV : START;
             break;
 
         case A_RCV:

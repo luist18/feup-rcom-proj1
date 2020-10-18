@@ -43,6 +43,16 @@ int llopen(char *port, enum open_type open_type);
 int llopen_emitter(int filedes);
 
 /**
+ * @brief Establishes the receptor connection.
+ * 
+ * @param filedes   the filedescriptor of the port
+ * @return int      0 if success, a negative number otherwise
+ */
+int llopen_receptor(int filedes);
+
+
+
+/**
  * @brief Writes data in the file descriptor.
  * 
  * @param fd        the filedescriptor
