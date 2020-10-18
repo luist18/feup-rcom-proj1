@@ -19,7 +19,9 @@ enum STATE {
     A_RCV,
     C_RCV,
     BCC_OK,
-    STOP
+    STOP,
+    RR_RCV,
+    REJ_RCV
 };
 
 /**
@@ -31,6 +33,8 @@ enum STATE {
  * @param control_flag  the control flag
  */
 void handle_state(enum STATE *current_state, char *byte, char address, char control_flag);
+
+void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr, char control_rej);
 
 /**
  * @brief Sets up the alarm handler. 

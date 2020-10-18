@@ -12,7 +12,7 @@
 
 struct termios oldtio, newtio;
 
-int retries = 3;
+int retries = 0;
 int flag = 0;
 int sequence_number = 0;
 
@@ -61,12 +61,12 @@ int llopen(char *port, enum open_type open_type) {
 
         case RECEPTOR:
             fd = open(port, O_RDWR | O_NOCTTY);
-            if (fd < 0){
+            if (fd < 0) {
                 perror(port);
                 exit(-1);
             }
 
-            if (tcgetattr(fd, &oldtio) == -1){ 
+            if (tcgetattr(fd, &oldtio) == -1) {
                 perror("tcgetattr");
                 exit(-1);
             }
@@ -84,18 +84,15 @@ int llopen(char *port, enum open_type open_type) {
 
             tcflush(fd, TCIOFLUSH);
 
-            if (tcsetattr(fd, TCSANOW, &newtio) == -1){
+            if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
                 perror("tcsetattr");
                 exit(-1);
-            }   
+            }
 
-            if (llopen_receptor(fd) < 0 ){
+            if (llopen_receptor(fd) < 0) {
                 return -1;
             }
             return_code = fd;
-
-
-
 
             break;
 
@@ -108,10 +105,10 @@ int llopen(char *port, enum open_type open_type) {
 }
 
 int llwrite(int filedes, char *data, int length) {
-    // TODO: replace with a default number
-    retries = 3;
+    retries = 0;
 
     enum STATE state = START;
+    enum STATE control;
 
     unsigned char *packet = build_information_packet(data, length, sequence_number);
 
@@ -127,13 +124,24 @@ int llwrite(int filedes, char *data, int length) {
         while (!flag && state != STOP) {
             read(filedes, &byte, sizeof(byte));
 
-            // handle state for RR e REJ
+            handle_state_emitter(&state, &byte, CONTROL_RR(sequence_number), CONTROL_REJ(sequence_number));
+
+            if (state == RR_RCV || state == REJ_RCV)
+                control = state;
         }
     } while (flag && retries <= MAX_TIMEOUT_RETRIES);
 
     if (state != STOP) {
         printf("Connection failed: timed out!\n");
         return -1;
+    }
+
+    if (control == RR_RCV)
+        sequence_number = !sequence_number;
+    else {
+        printf("Packet rejected, sending again...\n");
+
+        return llwrite(filedes, data, length);
     }
 
     return 0;
@@ -150,55 +158,40 @@ int llclose(int fd) {
     return 0;
 }
 
-int llopen_receptor(int filedes){
+int llopen_receptor(int filedes) {
     printf("Awaiting connection establishment from receptor...\n");
-    
-    // TODO: replace with a default number
-    retries = 3;
+
+    retries = 0;
 
     enum STATE state = START;
 
-    
+    char byte;
+    while (state != STOP) {
+        read(filedes, &byte, sizeof(byte));
 
-    do{
-        char byte;
-        flag = 0;
+        handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_SET);
+    }
 
-        while (!flag && state != STOP) {
-            read(filedes, &byte, sizeof(byte));
-
-            handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_SET);
-        }
-
-    } while (flag && retries <= MAX_TIMEOUT_RETRIES);
-
-
-    if (state != STOP){
-        printf("Connection failed. No vaild set up message was received!\n");
+    if (state != STOP) {
+        printf("Connection failed. No valid SET packet was received!\n");
         return -1;
+    } else {
+        printf("SET packet received.\n");
     }
-    else{
-        printf("Everything worked out perfectly. Going to write UA Message\n");
-    }
-
 
     /*
         TODO: Check what happens if sending UA fails. Might need to redo this part
     */
     control_packet ua_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_UA);
     write(filedes, &ua_packet, sizeof(ua_packet));
-    
+
     return 0;
-
 }
-
-
 
 int llopen_emitter(int filedes) {
     printf("Establishing connection with receptor...\n");
 
-    // TODO: replace with a default number
-    retries = 3;
+    retries = 0;
 
     enum STATE state = START;
 

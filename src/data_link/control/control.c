@@ -52,6 +52,60 @@ void handle_state(enum STATE *current_state, char *byte, char address, char cont
     }
 }
 
+void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr, char control_rej) {
+    switch (*current_state) {
+        case START:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : START;
+            break;
+
+        case FLAG_RCV:
+            if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = *byte == RECEPTOR_ADDRESS ? A_RCV : START;
+            break;
+
+        case A_RCV:
+            if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else if (*byte == control_rr)
+                *current_state = RR_RCV;
+            else if (*byte == control_rej)
+                *current_state = REJ_RCV;
+            else
+                *current_state = START;
+
+            break;
+
+        case RR_RCV:
+            if (*byte == (RECEPTOR_ADDRESS ^ control_rr))
+                *current_state = BCC_OK;
+            else if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = START;
+
+            break;
+
+        case REJ_RCV:
+            if (*byte == (RECEPTOR_ADDRESS ^ control_rej))
+                *current_state = BCC_OK;
+            else if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = START;
+
+            break;
+
+        case BCC_OK:
+            *current_state = *byte == DELIMITER_FLAG ? STOP : START;
+            break;
+
+        default:
+            break;
+    }
+}
+
 void alarm_handler(int sig) {
     flag = 1;
     retries++;
