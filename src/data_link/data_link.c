@@ -104,6 +104,92 @@ int llopen(char *port, enum open_type open_type) {
     return return_code;
 }
 
+int llread(int fd, char* buffer ){
+    //STEP: RECEIVE TRAMA
+    enum INFO_STATE information_state = START;
+
+    char* data = malloc(sizeof(char));
+    unsigned int numberOfBytesRead = 0;
+
+    char byte;
+    while (information_state != STOP) {
+        read(fd, &byte, sizeof(byte));
+        data[numberOfBytesRead] = byte;
+        numberOfBytesRead++;
+        data = realloc(data, 1 + numberOfBytesRead); //TODO check if realloc fails
+        handle_state_receptor_information(&information_state, &byte, EMITTER_ADDRESS, CONTROL_SET);
+    }
+
+    //Verificacao de Cabecalho já está feito na state machine
+    
+
+    //STEP: FAZER DESTUFF
+    char old_BCC2 = data[numberOfBytesRead-2];
+    data = destuff(data, numberOfBytesRead);
+
+
+    /*STEP: VERIFICAR CAMPO DE DADOS (BCC2)
+        - s/ erro:
+            - nova trama:
+                - passar trama a aplicacao
+                - confirmar, enviando RR para o emissor
+            - trama duplicada
+                - descartar
+                - confirmar receção, enviando RR para o emissor
+
+        - c/erro:
+            - nova trama:
+                - pedir c/ REJ
+            - trama duplicada:
+                - confirmar c/ RR
+    */
+
+   
+    //STEP: Verificação de BCC2
+    char new_BCC2 = data[4];
+    for (int i = 5; i < numberOfBytesRead-2; i++){
+        new_BCC2 ^= data[i];
+    }
+
+    int there_is_error = 0;
+    if (old_BCC2 != new_BCC2)
+        there_is_error = 1; //probably there's a more fancy way to do this, but I'm too tired and I'm probably gonna mess it up
+    
+    int packet_is_new = 0;
+    if (!there_is_error){
+        if (packet_is_new){
+            //TODO passar à aplicação
+        }
+        else{
+            //discard packet
+        }
+        //Enviar RR para o emissor - 
+        // TODO Check if the address field is correct same as the ones below. If it's wrong, llopen_receptor is wrong aswell
+        // TODO Also check if sequence number is being properly used here or if I must use a var response_number
+        control_packet rr_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_RR(sequence_number));
+        write(fd, &rr_packet, sizeof(rr_packet));
+
+
+    }
+    else{ //There is error
+        if (packet_is_new){
+            //Enviar REJ para o emissor
+            control_packet rej_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_REJ(sequence_number));
+            write(fd, &rej_packet, sizeof(rej_packet));
+        }
+        else{
+            //Enviar RR para o emissor
+            control_packet rr_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_RR(sequence_number));
+            write(fd, &rr_packet, sizeof(rr_packet));
+        }
+    }
+
+    
+    
+            
+
+
+}
 int llwrite(int filedes, char *data, int length) {
     retries = 0;
 

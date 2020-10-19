@@ -10,6 +10,55 @@
 extern int retries;
 extern int flag;
 
+
+void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char control_flag){
+    switch (*current_state) {
+        case START:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : START;
+            break;
+
+        case FLAG_RCV:
+            if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = *byte == address ? A_RCV : START;
+            break;
+
+        case A_RCV:
+            if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else if (*byte == control_flag)
+                *current_state = C_RCV;
+            else
+                *current_state = START;
+
+            break;
+
+        case C_RCV:
+            if (*byte == (address ^ control_flag))
+                *current_state = BCC_OK;
+            else if (*byte == DELIMITER_FLAG)
+                *current_state = FLAG_RCV;
+            else
+                *current_state = START;
+
+            break;
+
+        case BCC1_OK:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : DATA_START;
+            break;
+        case DATA_START:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : DATA_CONTINUE;
+            break;
+        case DATA_CONTINUE:
+            *current_state = *byte == DELIMITER_FLAG ? STOP : DATA_CONTINUE;
+            break;
+        default:
+            break;
+    }
+}
+
+
 void handle_state(enum STATE *current_state, char *byte, char address, char control_flag) {
     switch (*current_state) {
         case START:
