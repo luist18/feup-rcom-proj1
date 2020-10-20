@@ -62,6 +62,7 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) 
 char *destuff(char *data, unsigned int length){
     //TODO Must check if I must reallocate memory if actual destuffing occurs
     char* destuffed_data = malloc(length * sizeof(char));
+    
 
     /*Field 0 ->Flag
     Field 1 ->Address
@@ -74,20 +75,22 @@ char *destuff(char *data, unsigned int length){
 
     //Destuffing the internal bytes
     char byte;
-    for (int i = 4; i < length-2; i++){
+    int current_position = 4;
+    for (int i = 4; i < length-2; i++, current_position++){
         byte = data[i];
         if (byte == ESCAPE ){
             if (data[i+1] == 0x5E){
-                destuffed_data[i] = 0x7E;
-                i++; //Skip over the byte next to the ESCAPE
+                destuffed_data[current_position] = 0x7E;
+                i++; //Skip over the byte next to the ESCAPE   
             }
             else if(data[i+1] == 0x5D){
-                destuffed_data[i] = ESCAPE;
+                destuffed_data[current_position] = ESCAPE;
                 i++;
             }
-            else{
-                destuffed_data[i] = byte;
-            }
+        }
+        else{
+        
+            destuffed_data[current_position] = byte;
         }
     }
 

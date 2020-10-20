@@ -164,9 +164,8 @@ int llread(int fd, char* buffer ){
             //discard packet
         }
         //Enviar RR para o emissor - 
-        // TODO Check if the address field is correct same as the ones below. If it's wrong, llopen_receptor is wrong aswell
         // TODO Also check if sequence number is being properly used here or if I must use a var response_number
-        control_packet rr_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_RR(sequence_number));
+        control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
         write(fd, &rr_packet, sizeof(rr_packet));
 
 
@@ -174,12 +173,12 @@ int llread(int fd, char* buffer ){
     else{ //There is error
         if (packet_is_new){
             //Enviar REJ para o emissor
-            control_packet rej_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_REJ(sequence_number));
+            control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
             write(fd, &rej_packet, sizeof(rej_packet));
         }
         else{
             //Enviar RR para o emissor
-            control_packet rr_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_RR(sequence_number));
+            control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
             write(fd, &rr_packet, sizeof(rr_packet));
         }
     }
@@ -187,7 +186,7 @@ int llread(int fd, char* buffer ){
     
     
             
-    return numberOfBytesRead; //todo must return negative value in case of error?
+    return numberOfBytesRead; //TODO must return negative value in case of error?
 
 }
 int llwrite(int filedes, char *data, int length) {
@@ -268,7 +267,7 @@ int llopen_receptor(int filedes) {
     /*
         TODO: Check what happens if sending UA fails. Might need to redo this part
     */
-    control_packet ua_packet = build_control_packet(RECEPTOR_ADDRESS, CONTROL_UA);
+    control_packet ua_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
     write(filedes, &ua_packet, sizeof(ua_packet));
 
     return 0;
