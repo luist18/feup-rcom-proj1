@@ -42,14 +42,22 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) 
     for (int i = 0; i < length; ++i) {
         char byte = data[i];
 
-        stuffed_data[*new_length] = data[i];
-
-        if (byte == DELIMITER_FLAG || byte == ESCAPE) {
-            stuffed_data[(*new_length)++] = ESCAPE;
+        if (byte == DELIMITER_FLAG) {
+            stuffed_data[*new_length] = ESCAPE;
+            stuffed_data[(*new_length)++] = DELIMITER_FLAG ^ 0x20;
 
             offset++;
 
             stuffed_data = realloc(stuffed_data, length + offset);
+        } else if (byte == ESCAPE) {
+            stuffed_data[*new_length] = ESCAPE;
+            stuffed_data[(*new_length)++] = ESCAPE ^ 0x20;
+
+            offset++;
+
+            stuffed_data = realloc(stuffed_data, length + offset);
+        } else {
+            stuffed_data[*new_length] = byte;
         }
 
         (*new_length)++;
@@ -58,18 +66,16 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) 
     return stuffed_data;
 }
 
-
-char *destuff(char *data, unsigned int length){
+char *destuff(char *data, unsigned int length) {
     //TODO Must check if I must reallocate memory if actual destuffing occurs
-    char* destuffed_data = malloc(length * sizeof(char));
-    
+    char *destuffed_data = malloc(length * sizeof(char));
 
     /*Field 0 ->Flag
     Field 1 ->Address
     Field 2 ->Control
     Field 3 ->BCC
     These states are not victim of (de)stuffing, only the "internal" data*/
-    for (int i = 0; i<=3; i++ ){
+    for (int i = 0; i <= 3; i++) {
         destuffed_data[i] = data[i];
     }
 
@@ -95,13 +101,11 @@ char *destuff(char *data, unsigned int length){
     }
 
     //Adding the remaining elements to the final array
-    destuffed_data[length-2] = data[length-2]; //BCC2
-    destuffed_data[length-1] = data[length-1]; //Flag
-    
+    destuffed_data[length - 2] = data[length - 2];  //BCC2
+    destuffed_data[length - 1] = data[length - 1];  //Flag
+
     return destuffed_data;
-
 }
-
 
 unsigned char get_data_bcc(char *data, unsigned int length) {
     unsigned char bcc = data[0];
