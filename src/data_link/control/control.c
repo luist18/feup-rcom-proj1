@@ -10,8 +10,7 @@
 extern int retries;
 extern int flag;
 
-
-void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char sequence_byte){
+void handle_state_receptor_information(enum INFO_STATE *current_state, char *byte, char address, char sequence_byte) {
     switch (*current_state) {
         case INFO_START:
             *current_state = *byte == DELIMITER_FLAG ? INFO_FLAG_RCV : INFO_START;
@@ -34,7 +33,7 @@ void handle_state_receptor_information(enum INFO_STATE *current_state, char* byt
 
             break;
 
-        case C_RCV:
+        case INFO_C_RCV:
             if (*byte == (address ^ sequence_byte))
                 *current_state = INFO_BCC1_OK;
             else if (*byte == DELIMITER_FLAG)
@@ -45,19 +44,21 @@ void handle_state_receptor_information(enum INFO_STATE *current_state, char* byt
             break;
 
         case INFO_BCC1_OK:
-            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : INFO_DATA_START;
+            *current_state = *byte == DELIMITER_FLAG ? INFO_FLAG_RCV : INFO_DATA_START;
             break;
+
         case INFO_DATA_START:
-            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : INFO_DATA_CONTINUE;
+            *current_state = *byte == DELIMITER_FLAG ? INFO_FLAG_RCV : INFO_DATA_CONTINUE;
             break;
+
         case INFO_DATA_CONTINUE:
-            *current_state = *byte == DELIMITER_FLAG ? STOP : INFO_DATA_CONTINUE;
+            *current_state = *byte == DELIMITER_FLAG ? INFO_STOP : INFO_DATA_CONTINUE;
             break;
+
         default:
             break;
     }
 }
-
 
 void handle_state(enum STATE *current_state, char *byte, char address, char control_flag) {
     switch (*current_state) {

@@ -66,43 +66,38 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) 
     return stuffed_data;
 }
 
-char *destuff(char *data, unsigned int length) {
-    //TODO Must check if I must reallocate memory if actual destuffing occurs
+char *destuff(char *data, unsigned int length, unsigned int *new_length) {
     char *destuffed_data = malloc(length * sizeof(char));
 
-    /*Field 0 ->Flag
-    Field 1 ->Address
-    Field 2 ->Control
-    Field 3 ->BCC
-    These states are not victim of (de)stuffing, only the "internal" data*/
-    for (int i = 0; i <= 3; i++) {
+    for (int i = 0; i < 4; i++)
         destuffed_data[i] = data[i];
-    }
 
-    //Destuffing the internal bytes
     char byte;
-    int current_position = 4;
-    for (int i = 4; i < length-2; i++, current_position++){
+
+    int current_index = 4;
+
+    for (int i = 4; i < length - 2; i++, current_index++) {
         byte = data[i];
-        if (byte == ESCAPE ){
-            if (data[i+1] == 0x5E){
-                destuffed_data[current_position] = 0x7E;
-                i++; //Skip over the byte next to the ESCAPE   
-            }
-            else if(data[i+1] == 0x5D){
+
+        if (byte == ESCAPE) {
+            if (data[i + 1] == 0x5e) {
+                destuffed_data[current_position] = 0x7e;
+                i++;
+            } else if (data[i + 1] == 0x5d) {
                 destuffed_data[current_position] = ESCAPE;
                 i++;
+            } else {
+                destuffed_data[current_position] = byte;
             }
-        }
-        else{
-        
-            destuffed_data[current_position] = byte;
         }
     }
 
-    //Adding the remaining elements to the final array
-    destuffed_data[length - 2] = data[length - 2];  //BCC2
-    destuffed_data[length - 1] = data[length - 1];  //Flag
+    destuffed_data[current_index++] = data[length - 2];
+    destuffed_data[current_index++] = data[length - 1];
+
+    destuffed_data = realloc(destuffed_data, current_index * sizeof(char));
+
+    *new_length = current_index;
 
     return destuffed_data;
 }

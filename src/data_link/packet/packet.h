@@ -39,6 +39,6 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length);
 //TODO DOCUMENT
 char *destuff(char *data, unsigned int length);
 
-unsigned char get_data_bcc(char *data, unsigned int length);
+unsigned char get_data_bcc(char *data, unsigned int length, unsigned int *new_length);
 
 #endif

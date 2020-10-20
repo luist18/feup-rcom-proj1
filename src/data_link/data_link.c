@@ -108,82 +108,46 @@ int llopen(char *port, enum open_type open_type) {
 }
 
 int llread(int fd, char *buffer) {
-    //STEP: RECEIVE TRAMA
-    enum INFO_STATE information_state = INFO_START;
+    enum INFO_STATE state = INFO_START;
 
     char *data = malloc(sizeof(char));
-    unsigned int numberOfBytesRead = 0;
+    unsigned int byte_count = 0;
 
     char byte;
-    while (information_state != INFO_STOP) {
+
+    while (state != INFO_STOP) {
         read(fd, &byte, sizeof(byte));
-        data[numberOfBytesRead] = byte;
-        numberOfBytesRead++;
-        data = realloc(data, 1 + numberOfBytesRead);  //TODO check if realloc fails
+        data[byte_count++] = byte;
+        data = realloc(data, byte_count + 1);
+
         handle_state_receptor_information(&information_state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
     }
 
-    //Verificacao de Cabecalho já está feito na state machine
+    char data_bcc2 = data[byte_count - 2];
 
-    //STEP: FAZER DESTUFF
-    char old_BCC2 = data[numberOfBytesRead - 2];
-    data = destuff(data, numberOfBytesRead);
+    unsigned int new_length;
+    data = destuff(data, byte_count, &new_length);
 
-    /*STEP: VERIFICAR CAMPO DE DADOS (BCC2)
-        - s/ erro:
-            - nova trama:
-                - passar trama a aplicacao
-                - confirmar, enviando RR para o emissor
-            - trama duplicada
-                - descartar
-                - confirmar receção, enviando RR para o emissor
-
-        - c/erro:
-            - nova trama:
-                - pedir c/ REJ
-            - trama duplicada:
-                - confirmar c/ RR
-    */
-
-    //STEP: Verificação de BCC2
-    char new_BCC2 = data[4];
-    for (int i = 5; i < numberOfBytesRead - 2; i++) {
-        new_BCC2 ^= data[i];
+    char bcc2 = data[4];
+    for (int i = 5; i < new_length - 2; i++) {
+        bcc2 ^= data[i];
     }
 
-    int there_is_error = 0;
-    if (old_BCC2 != new_BCC2)
-        there_is_error = 1;  //probably there's a more fancy way to do this, but I'm too tired and I'm probably gonna mess it up
+    int data_sequence_number = data[2] >> 6;
 
-    int packet_is_new = 0;
-    if (!there_is_error) {
-        if (packet_is_new) {
-            //TODO passar à aplicação
-        } else {
-            //discard packet
-        }
-        //Enviar RR para o emissor - 
-        // TODO Also check if sequence number is being properly used here or if I must use a var response_number
+    if (data_sequence_number == sequence_number && data_bcc2 == bcc2) {
         control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
+
         write(fd, &rr_packet, sizeof(rr_packet));
 
-    } else {  //There is error
-        if (packet_is_new) {
-            //Enviar REJ para o emissor
-            control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
-            write(fd, &rej_packet, sizeof(rej_packet));
-        } else {
-            //Enviar RR para o emissor
-            control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
-            write(fd, &rr_packet, sizeof(rr_packet));
-        }
+        sequence_number = !sequence_number;
+    } else {
+        control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
+
+        write(fd, &rej_packet, sizeof(rej_packet));
     }
 
-    
-    
-            
-    return numberOfBytesRead; //TODO must return negative value in case of error?
-
+    return byte_count;
 }
 
 int llwrite(int filedes, char *data, int length) {
@@ -262,7 +226,6 @@ int llopen_receptor(int filedes) {
         printf("SET packet received.\n");
     }
 
-    
     control_packet ua_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
     write(filedes, &ua_packet, sizeof(ua_packet));
 

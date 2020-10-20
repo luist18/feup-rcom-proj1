@@ -27,12 +27,12 @@ enum STATE {
 /**
  * @Brief Enumerate for the reading Information state machine
  */
-enum INFO_STATE{
-    INFO_START, 
+enum INFO_STATE {
+    INFO_START,
     INFO_FLAG_RCV,
     INFO_A_RCV,
-    INFO_C_RCV, 
-    INFO_BCC1_OK, 
+    INFO_C_RCV,
+    INFO_BCC1_OK,
     INFO_DATA_START,
     INFO_DATA_CONTINUE,
     INFO_STOP
@@ -50,7 +50,7 @@ void handle_state(enum STATE *current_state, char *byte, char address, char cont
 
 void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr, char control_rej);
 
-void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char control_flag);
+void handle_state_receptor_information(enum INFO_STATE *current_state, char *byte, char address, char control_flag);
 
 /**
  * @brief Sets up the alarm handler. 

@@ -50,8 +50,6 @@ int llopen_emitter(int filedes);
  */
 int llopen_receptor(int filedes);
 
-
-
 /**
  * @brief Writes data in the file descriptor.
  * 
@@ -62,8 +60,6 @@ int llopen_receptor(int filedes);
  */
 int llwrite(int fd, char *data, int length);
 
-
-
 /**
  * @brief Reads the data from the file descriptor.
  * 
@@ -72,8 +68,7 @@ int llwrite(int fd, char *data, int length);
  * @return int      length of the array (number of characters read), negative value otherwise
  * 
  */
-int llread(int fd, char* buffer );
-
+int llread(int fd, char *buffer);
 
 /**
  * @brief Closes a connection.
