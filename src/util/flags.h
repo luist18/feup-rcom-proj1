@@ -24,6 +24,8 @@
 #define CONTROL_RR(v) (((v) == 1 ? 0x80 : 0x00) | 0x05)
 #define CONTROL_REJ(v) (((v) == 1 ? 0x80 : 0x00) | 0x01)
 
+#define INFO_SEQUENCE(v) ((v) == 1 ? 0x40 : 0x00)
+
 #define INFORMATION_PACKET_BASE_SIZE 6 * sizeof(char)
 
 /**

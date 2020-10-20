@@ -11,7 +11,7 @@ extern int retries;
 extern int flag;
 
 
-void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char control_flag){
+void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char sequence_byte){
     switch (*current_state) {
         case INFO_START:
             *current_state = *byte == DELIMITER_FLAG ? INFO_FLAG_RCV : INFO_START;
@@ -27,7 +27,7 @@ void handle_state_receptor_information(enum INFO_STATE *current_state, char* byt
         case INFO_A_RCV:
             if (*byte == DELIMITER_FLAG)
                 *current_state = INFO_FLAG_RCV;
-            else if (*byte == control_flag)
+            else if (*byte == sequence_byte)
                 *current_state = INFO_C_RCV;
             else
                 *current_state = INFO_START;
@@ -35,7 +35,7 @@ void handle_state_receptor_information(enum INFO_STATE *current_state, char* byt
             break;
 
         case C_RCV:
-            if (*byte == (address ^ control_flag))
+            if (*byte == (address ^ sequence_byte))
                 *current_state = INFO_BCC1_OK;
             else if (*byte == DELIMITER_FLAG)
                 *current_state = INFO_FLAG_RCV;

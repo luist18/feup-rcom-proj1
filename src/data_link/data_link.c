@@ -120,7 +120,7 @@ int llread(int fd, char *buffer) {
         data[numberOfBytesRead] = byte;
         numberOfBytesRead++;
         data = realloc(data, 1 + numberOfBytesRead);  //TODO check if realloc fails
-        handle_state_receptor_information(&information_state, &byte, EMITTER_ADDRESS, CONTROL_SET);
+        handle_state_receptor_information(&information_state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
     }
 
     //Verificacao de Cabecalho já está feito na state machine
