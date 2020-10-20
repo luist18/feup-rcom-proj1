@@ -37,7 +37,7 @@ unsigned char *build_information_packet(char *data, unsigned int length, unsigne
 unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length);
 
 //TODO DOCUMENT
-unsigned char *destuff(char *data, unsigned int length);
+char *destuff(char *data, unsigned int length);
 
 unsigned char get_data_bcc(char *data, unsigned int length);
 

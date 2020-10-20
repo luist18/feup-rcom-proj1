@@ -13,45 +13,45 @@ extern int flag;
 
 void handle_state_receptor_information(enum INFO_STATE *current_state, char* byte, char address, char control_flag){
     switch (*current_state) {
-        case START:
-            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : START;
+        case INFO_START:
+            *current_state = *byte == DELIMITER_FLAG ? INFO_FLAG_RCV : INFO_START;
             break;
 
-        case FLAG_RCV:
+        case INFO_FLAG_RCV:
             if (*byte == DELIMITER_FLAG)
-                *current_state = FLAG_RCV;
+                *current_state = INFO_FLAG_RCV;
             else
-                *current_state = *byte == address ? A_RCV : START;
+                *current_state = *byte == address ? INFO_A_RCV : INFO_START;
             break;
 
-        case A_RCV:
+        case INFO_A_RCV:
             if (*byte == DELIMITER_FLAG)
-                *current_state = FLAG_RCV;
+                *current_state = INFO_FLAG_RCV;
             else if (*byte == control_flag)
-                *current_state = C_RCV;
+                *current_state = INFO_C_RCV;
             else
-                *current_state = START;
+                *current_state = INFO_START;
 
             break;
 
         case C_RCV:
             if (*byte == (address ^ control_flag))
-                *current_state = BCC_OK;
+                *current_state = INFO_BCC1_OK;
             else if (*byte == DELIMITER_FLAG)
-                *current_state = FLAG_RCV;
+                *current_state = INFO_FLAG_RCV;
             else
-                *current_state = START;
+                *current_state = INFO_START;
 
             break;
 
-        case BCC1_OK:
-            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : DATA_START;
+        case INFO_BCC1_OK:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : INFO_DATA_START;
             break;
-        case DATA_START:
-            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : DATA_CONTINUE;
+        case INFO_DATA_START:
+            *current_state = *byte == DELIMITER_FLAG ? FLAG_RCV : INFO_DATA_CONTINUE;
             break;
-        case DATA_CONTINUE:
-            *current_state = *byte == DELIMITER_FLAG ? STOP : DATA_CONTINUE;
+        case INFO_DATA_CONTINUE:
+            *current_state = *byte == DELIMITER_FLAG ? STOP : INFO_DATA_CONTINUE;
             break;
         default:
             break;

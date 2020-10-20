@@ -59,9 +59,9 @@ unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) 
 }
 
 
-unsigned char *destuff(char *data, unsigned int length){
+char *destuff(char *data, unsigned int length){
     //TODO Must check if I must reallocate memory if actual destuffing occurs
-    unsigned char* destuffed_data = malloc(length * sizeof(char));
+    char* destuffed_data = malloc(length * sizeof(char));
 
     /*Field 0 ->Flag
     Field 1 ->Address

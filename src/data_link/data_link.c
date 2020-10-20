@@ -106,13 +106,13 @@ int llopen(char *port, enum open_type open_type) {
 
 int llread(int fd, char* buffer ){
     //STEP: RECEIVE TRAMA
-    enum INFO_STATE information_state = START;
+    enum INFO_STATE information_state = INFO_START;
 
     char* data = malloc(sizeof(char));
     unsigned int numberOfBytesRead = 0;
 
     char byte;
-    while (information_state != STOP) {
+    while (information_state != INFO_STOP) {
         read(fd, &byte, sizeof(byte));
         data[numberOfBytesRead] = byte;
         numberOfBytesRead++;
@@ -187,7 +187,7 @@ int llread(int fd, char* buffer ){
     
     
             
-
+    return numberOfBytesRead; //todo must return negative value in case of error?
 
 }
 int llwrite(int filedes, char *data, int length) {

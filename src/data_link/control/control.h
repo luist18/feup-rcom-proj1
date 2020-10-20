@@ -28,14 +28,14 @@ enum STATE {
  * @Brief Enumerate for the reading Information state machine
  */
 enum INFO_STATE{
-    START, 
-    FLAG_RCV,
-    A_RCV,
-    C_RCV, 
-    BCC1_OK, 
-    DATA_START,
-    DATA_CONTINUE,
-    STOP
+    INFO_START, 
+    INFO_FLAG_RCV,
+    INFO_A_RCV,
+    INFO_C_RCV, 
+    INFO_BCC1_OK, 
+    INFO_DATA_START,
+    INFO_DATA_CONTINUE,
+    INFO_STOP
 };
 
 /**
