@@ -15,7 +15,7 @@ control_packet build_control_packet(char address, char control) {
     return packet;
 }
 
-unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number) {
+unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length) {
     unsigned int new_length;
 
     unsigned char *data_stuffed = stuff(data, length, &new_length);
@@ -25,10 +25,12 @@ unsigned char *build_information_packet(char *data, unsigned int length, unsigne
     packet[0] = DELIMITER_FLAG;
     packet[1] = EMITTER_ADDRESS;
     packet[2] = sequence_number << 6;
-    packet[3] = DELIMITER_FLAG ^ EMITTER_ADDRESS;
+    packet[3] = packet[2] ^ EMITTER_ADDRESS;
     memcpy(&packet[4], data_stuffed, new_length);
     packet[new_length + 4] = get_data_bcc(data, length);
     packet[new_length + 5] = DELIMITER_FLAG;
+
+    *packet_length = new_length + 6;
 
     return packet;
 }
@@ -76,19 +78,19 @@ char *destuff(char *data, unsigned int length, unsigned int *new_length) {
 
     int current_index = 4;
 
-    for (int i = 4; i < length - 2; i++, current_index++) {
+    for (int i = 4; i < length - 2; ++i, ++current_index) {
         byte = data[i];
 
         if (byte == ESCAPE) {
             if (data[i + 1] == 0x5e) {
-                destuffed_data[current_position] = 0x7e;
+                destuffed_data[current_index] = 0x7e;
                 i++;
             } else if (data[i + 1] == 0x5d) {
-                destuffed_data[current_position] = ESCAPE;
+                destuffed_data[current_index] = ESCAPE;
                 i++;
-            } else {
-                destuffed_data[current_position] = byte;
             }
+        } else {
+            destuffed_data[current_index] = byte;
         }
     }
 

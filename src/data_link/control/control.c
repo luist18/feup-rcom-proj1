@@ -112,7 +112,7 @@ void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr
             if (*byte == DELIMITER_FLAG)
                 *current_state = FLAG_RCV;
             else
-                *current_state = *byte == RECEPTOR_ADDRESS ? A_RCV : START;
+                *current_state = *byte == EMITTER_ADDRESS ? A_RCV : START;
             break;
 
         case A_RCV:
@@ -128,7 +128,7 @@ void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr
             break;
 
         case RR_RCV:
-            if (*byte == (RECEPTOR_ADDRESS ^ control_rr))
+            if (*byte == (EMITTER_ADDRESS ^ control_rr))
                 *current_state = BCC_OK;
             else if (*byte == DELIMITER_FLAG)
                 *current_state = FLAG_RCV;
@@ -138,7 +138,7 @@ void handle_state_emitter(enum STATE *current_state, char *byte, char control_rr
             break;
 
         case REJ_RCV:
-            if (*byte == (RECEPTOR_ADDRESS ^ control_rej))
+            if (*byte == (EMITTER_ADDRESS ^ control_rej))
                 *current_state = BCC_OK;
             else if (*byte == DELIMITER_FLAG)
                 *current_state = FLAG_RCV;

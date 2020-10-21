@@ -24,7 +24,7 @@ typedef struct control_packet {
  */
 control_packet build_control_packet(char address, char control);
 
-unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number);
+unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length);
 
 /**
  * @brief Stuffs data.
@@ -36,9 +36,8 @@ unsigned char *build_information_packet(char *data, unsigned int length, unsigne
  */
 unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length);
 
-//TODO DOCUMENT
-char *destuff(char *data, unsigned int length);
+char *destuff(char *data, unsigned int length, unsigned int *new_length);
 
-unsigned char get_data_bcc(char *data, unsigned int length, unsigned int *new_length);
+unsigned char get_data_bcc(char *data, unsigned int length);
 
 #endif

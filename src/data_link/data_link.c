@@ -1,6 +1,7 @@
 #include "data_link.h"
 
 #include <fcntl.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
 #include <termios.h>
@@ -117,10 +118,11 @@ int llread(int fd, char *buffer) {
 
     while (state != INFO_STOP) {
         read(fd, &byte, sizeof(byte));
+
         data[byte_count++] = byte;
         data = realloc(data, byte_count + 1);
 
-        handle_state_receptor_information(&information_state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
+        handle_state_receptor_information(&state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
     }
 
     char data_bcc2 = data[byte_count - 2];
@@ -129,6 +131,7 @@ int llread(int fd, char *buffer) {
     data = destuff(data, byte_count, &new_length);
 
     char bcc2 = data[4];
+
     for (int i = 5; i < new_length - 2; i++) {
         bcc2 ^= data[i];
     }
@@ -147,7 +150,9 @@ int llread(int fd, char *buffer) {
         write(fd, &rej_packet, sizeof(rej_packet));
     }
 
-    return byte_count;
+    memcpy(buffer, data + 4, byte_count - 2);
+
+    return byte_count - INFORMATION_PACKET_BASE_SIZE;
 }
 
 int llwrite(int filedes, char *data, int length) {
@@ -156,10 +161,11 @@ int llwrite(int filedes, char *data, int length) {
     enum STATE state = START;
     enum STATE control;
 
-    unsigned char *packet = build_information_packet(data, length, sequence_number);
+    unsigned int packet_length;
+    unsigned char *packet = build_information_packet(data, length, sequence_number, &packet_length);
 
     do {
-        write(filedes, &packet, sizeof(packet));
+        write(filedes, &(*packet), packet_length);
 
         alarm(3);
 
@@ -177,20 +183,22 @@ int llwrite(int filedes, char *data, int length) {
         }
     } while (flag && retries <= MAX_TIMEOUT_RETRIES);
 
+    alarm(0);
+
     if (state != STOP) {
         printf("Connection failed: timed out!\n");
         return -1;
     }
 
-    if (control == RR_RCV)
+    if (control == RR_RCV) {
         sequence_number = !sequence_number;
-    else {
+    } else {
         printf("Packet rejected, sending again...\n");
 
         return llwrite(filedes, data, length);
     }
 
-    return 0;
+    return packet_length;
 }
 
 int llclose(int fd) {
@@ -253,9 +261,11 @@ int llopen_emitter(int filedes) {
         while (!flag && state != STOP) {
             read(filedes, &byte, sizeof(byte));
 
-            handle_state(&state, &byte, RECEPTOR_ADDRESS, CONTROL_UA);
+            handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_UA);
         }
     } while (flag && retries <= MAX_TIMEOUT_RETRIES);
+
+    alarm(0);
 
     if (state != STOP) {
         printf("Connection failed: timed out!\n");
