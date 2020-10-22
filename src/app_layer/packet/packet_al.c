@@ -6,11 +6,11 @@
 
 #include "../../util/flags.h"
 
-unsigned char* build_app_control_packet(unsigned char control_byte, unsigned char type[], unsigned char sizes[],
-                                        char** data, unsigned int size, unsigned int* packet_length) {
+char* build_app_control_packet(char control_byte, char type[], unsigned char sizes[],
+                               char** data, unsigned int size, unsigned int* packet_length) {
     int current_length = 2 * sizeof(char), index = 0;
 
-    unsigned char* packet = malloc(current_length);
+    char* packet = malloc(current_length);
 
     packet[index++] = control_byte;
 
@@ -35,10 +35,10 @@ unsigned char* build_app_control_packet(unsigned char control_byte, unsigned cha
     return packet;
 }
 
-unsigned char* build_app_data_packet(unsigned char sequence_number, unsigned int size, unsigned char* data, unsigned int* packet_length) {
+char* build_app_data_packet(char sequence_number, unsigned int size, char* data, unsigned int* packet_length) {
     int length = 4 + size;
 
-    unsigned char* packet = malloc(length);
+    char* packet = malloc(length);
 
     packet[0] = AL_CONTROL_DATA;
     packet[1] = sequence_number % 255;

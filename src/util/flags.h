@@ -40,6 +40,8 @@
 #define AL_CONTROL_START 0x01
 #define AL_CONTROL_END 0x01
 
+#define AL_PACKET_SIZE 8
+
 /**
  * END - App layer configuration.
  */
