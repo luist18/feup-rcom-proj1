@@ -31,4 +31,16 @@
 /**
  * END - Data link configuration.
  */
+
+/**
+ * END - App layer configuration.
+ */
+
+#define AL_CONTROL_DATA 0x01
+#define AL_CONTROL_START 0x01
+#define AL_CONTROL_END 0x01
+
+/**
+ * END - App layer configuration.
+ */
 #endif

@@ -204,16 +204,16 @@ int llwrite(int filedes, char *data, int length) {
 }
 
 int llclose(int fd, enum open_type open_type) {
-     enum STATE state = START;
-    switch (open_type){
+    enum STATE state = START;
+
+    switch (open_type) {
         case EMITTER:
             printf("Terminating connection with receptor...\n");
             retries = 0;
-            //Sending DISC command to receptor
+
             control_packet packet = build_control_packet(EMITTER_ADDRESS, CONTROL_DISC);
 
-            do
-            {
+            do {
                 write(fd, &packet, sizeof(packet));
                 printf("Sent DISC packet to receptor!\n");
 
@@ -223,9 +223,7 @@ int llclose(int fd, enum open_type open_type) {
 
                 flag = 0;
 
-                //Get the receptor's answer. It must receive a valid DISC command as well
-                while (!flag && state != STOP)
-                {
+                while (!flag && state != STOP) {
                     read(fd, &byte, sizeof(byte));
 
                     handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_DISC);
@@ -234,88 +232,73 @@ int llclose(int fd, enum open_type open_type) {
 
             alarm(0);
 
-            if (state != STOP)
-            {
+            if (state != STOP) {
                 printf("Connection failed: timed out!\n");
-                //TODO check if I must do - tcsetattr(fd, TCSANOW, &oldtio) - before returning here if communication fails
                 return -1;
             }
-            //When it gets here, emitter sent and received a valid DISC from user
-            printf("Received valid DISC response!\n");
-            //Emitter must write UA to receptor
-            
+            printf("Received valid DISC response.\n");
+
             packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
+
             write(fd, &packet, sizeof(packet));
-            printf("Send UA packet to receptor!\n");
 
-            if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
-            {
-                perror("tcsetattr");
-                return -1;
-            }
+            printf("Sent UA packet to receptor!\n");
 
-            close(fd);
-
-            return 0;
+            break;
         case RECEPTOR:
-            printf("Awaying termination by the emitter...\n");
+            printf("Awayting termination by the emitter...\n");
+
             char byte;
+
             state = START;
-            while (state != STOP)
-            {
+
+            while (state != STOP) {
                 read(fd, &byte, sizeof(byte));
 
                 handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_DISC);
             }
 
-            if (state != STOP)
-            {
-                printf("Disconnection failed. No valid DISC packet was received!\n");
-                return -1;
-            }
-            else
-            {
-                printf("DISC packet received.\n");
+            if (state != STOP) {
+                printf("Failed to disconnect. No valid DISC packet was received!\n");
+                return llclose(fd, open_type);
             }
 
-
-            //Now, send back DISC packet
+            printf("DISC packet received.\n");
 
             packet = build_control_packet(EMITTER_ADDRESS, CONTROL_DISC);
-            
+
             write(fd, &packet, sizeof(packet));
-            printf("Sent DISC packet to emitter!\n");
-            
-            
+
+            printf("Sent DISC packet to emitter.\n");
+
             state = START;
-            for (int i = 0; i< 5; i++){
+
+            while (state != STOP) {
                 read(fd, &byte, sizeof(byte));
 
                 handle_state(&state, &byte, EMITTER_ADDRESS, CONTROL_UA);
             }
-            if (state != STOP)
-            {
-                printf("Disconnection failed. No valid UA packet was received!\n");
-                return -1;
-            }
-            else
-            {
-                printf("UA packet received.\n");
-            }
 
-            if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
-            {
-                perror("tcsetattr");
+            if (state != STOP) {
+                printf("Failed to disconnect. No valid UA packet was received!\n");
                 return -1;
             }
 
-            close(fd);
+            printf("UA packet received.\n");
 
-            return 0;
+            break;
         default:
             return -1;
-            
     }
+
+    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+        perror("tcsetattr");
+        return -1;
+    }
+
+    close(fd);
+
+    return 0;
 }
 
 int llopen_receptor(int filedes) {

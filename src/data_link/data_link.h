@@ -77,6 +77,6 @@ int llread(int fd, char *buffer);
  * @param open_type the open type
  * @return int  0 if success, a negative number otherwise
  */
-int llclose(int fd, enum open_type open_type );
+int llclose(int fd, enum open_type open_type);
 
 #endif
