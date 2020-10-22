@@ -74,8 +74,9 @@ int llread(int fd, char *buffer);
  * @brief Closes a connection.
  * 
  * @param fd    the filedescriptor
+ * @param open_type the open type
  * @return int  0 if success, a negative number otherwise
  */
-int llclose(int fd);
+int llclose(int fd, enum open_type open_type );
 
 #endif

@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     if (fd = llopen(argv[1], EMITTER), fd < 0)
         exit(1);
 
-    if (llclose(fd) < 0)
+    if (llclose(fd, EMITTER) < 0)
         exit(2);
 
     return 0;
