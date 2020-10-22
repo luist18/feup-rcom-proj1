@@ -6,8 +6,6 @@
 #include <termios.h>
 
 #include "../data_link/data_link.h"
-#include "../data_link/packet/packet.h"
-#include "../util/flags.h"
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 

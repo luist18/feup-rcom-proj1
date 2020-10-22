@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #include "../../util/flags.h"
-#include "../packet/packet.h"
+#include "../packet/packet_dl.h"
 
 extern int retries;
 extern int flag;

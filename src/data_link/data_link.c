@@ -9,7 +9,7 @@
 
 #include "../util/flags.h"
 #include "control/control.h"
-#include "packet/packet.h"
+#include "packet/packet_dl.h"
 
 struct termios oldtio, newtio;
 
@@ -148,6 +148,8 @@ int llread(int fd, char *buffer) {
         control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
 
         write(fd, &rej_packet, sizeof(rej_packet));
+
+        return llread(fd, buffer);
     }
 
     memcpy(buffer, data + 4, byte_count - 2);
