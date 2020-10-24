@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-long read_file(char *filename, char *buffer) {
+long get_file_length(char *filename) {
     FILE *file;
     long length;
 
@@ -16,16 +16,6 @@ long read_file(char *filename, char *buffer) {
         return -1;
 
     if ((length = ftell(file)) < 0)
-        return -1;
-
-    rewind(file);
-
-    buffer = (char *)malloc(length * sizeof(char));
-
-    if (fread(buffer, length, 1, file) < 0)
-        return -1;
-
-    if (fclose(file) < 0)
         return -1;
 
     return length;

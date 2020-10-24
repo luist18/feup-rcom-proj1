@@ -6,33 +6,37 @@
 
 #include "../../util/flags.h"
 
-char* build_app_control_packet(char control_byte, char type[], unsigned char sizes[],
-                               char** data, unsigned int size, unsigned int* packet_length) {
-    int current_length = 2 * sizeof(char), index = 0;
+char* build_app_control_packet(char control_byte, unsigned char type, unsigned char size,
+                               char* data, int* packet_length) {
+    unsigned int length = 3 + (unsigned int)size;
 
-    char* packet = malloc(current_length);
+    char* buffer = malloc((int)length * sizeof(char));
 
-    packet[index++] = control_byte;
+    buffer[0] = control_byte;
+    buffer[1] = type;
+    buffer[2] = size;
 
-    for (int i = 0; i < size; ++i) {
-        char data_type = type[i];
-        char data_size = sizes[i];
+    for (int i = 0; i < size; ++i)
+        buffer[3 + i] = data[i];
 
-        current_length += (data_size + 2);
+    *packet_length = length;
+    return buffer;
+}
 
-        packet = realloc(packet, current_length);
+char* append_app_control_packet(char* buffer, unsigned char type, unsigned char size,
+                                char* data, int old_length, int* packet_length) {
+    unsigned int length = old_length + 3 + (unsigned int)size;
 
-        packet[index++] = data_type;
-        packet[index++] = data_size;
+    buffer = realloc(buffer, (int)length * sizeof(char));
 
-        memcpy(&packet[index], &(*data[i]), data_size);
+    buffer[old_length] = type;
+    buffer[old_length + 1] = size;
 
-        index += data_size;
-    }
+    for (int i = 0; i < size; ++i)
+        buffer[old_length + 2 + i] = data[i];
 
-    *packet_length = current_length - 1;
-
-    return packet;
+    *packet_length = length;
+    return buffer;
 }
 
 char* build_app_data_packet(char sequence_number, unsigned int size, char* data, unsigned int* packet_length) {

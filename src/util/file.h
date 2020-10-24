@@ -1,6 +1,6 @@
 #ifndef FILE_H
 #define FILE_H
 
-long read_file(char *filename, char *buffer);
+long get_file_length(char *filename);
 
 #endif

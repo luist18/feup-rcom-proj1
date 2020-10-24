@@ -37,8 +37,11 @@
  */
 
 #define AL_CONTROL_DATA 0x01
-#define AL_CONTROL_START 0x01
-#define AL_CONTROL_END 0x01
+#define AL_CONTROL_START 0x02
+#define AL_CONTROL_END 0x03
+
+#define AL_TYPE_LENGTH 0x1
+#define AL_TYPE_NAME 0x02
 
 #define AL_PACKET_SIZE 8
 

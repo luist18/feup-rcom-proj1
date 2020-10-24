@@ -208,14 +208,13 @@ int llclose(int fd, enum open_type open_type) {
 
     switch (open_type) {
         case EMITTER:
-            printf("Terminating connection with receptor...\n");
             retries = 0;
 
             control_packet packet = build_control_packet(EMITTER_ADDRESS, CONTROL_DISC);
 
             do {
                 write(fd, &packet, sizeof(packet));
-                printf("Sent DISC packet to receptor!\n");
+                printf("Terminating connection with receptor...\n");
 
                 alarm(3);
 
@@ -236,13 +235,12 @@ int llclose(int fd, enum open_type open_type) {
                 printf("Connection failed: timed out!\n");
                 return -1;
             }
-            printf("Received valid DISC response.\n");
 
             packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
 
             write(fd, &packet, sizeof(packet));
 
-            printf("Sent UA packet to receptor!\n");
+            printf("Successfully disconnected.\n");
 
             break;
         case RECEPTOR:
@@ -263,13 +261,9 @@ int llclose(int fd, enum open_type open_type) {
                 return llclose(fd, open_type);
             }
 
-            printf("DISC packet received.\n");
-
             packet = build_control_packet(EMITTER_ADDRESS, CONTROL_DISC);
 
             write(fd, &packet, sizeof(packet));
-
-            printf("Sent DISC packet to emitter.\n");
 
             state = START;
 
@@ -284,7 +278,7 @@ int llclose(int fd, enum open_type open_type) {
                 return -1;
             }
 
-            printf("UA packet received.\n");
+            printf("Successfully disconnected.\n");
 
             break;
         default:
@@ -319,9 +313,9 @@ int llopen_receptor(int filedes) {
     if (state != STOP) {
         printf("Connection failed. No valid SET packet was received!\n");
         return -1;
-    } else {
-        printf("SET packet received.\n");
     }
+
+    printf("Connection established.\n");
 
     control_packet ua_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
     write(filedes, &ua_packet, sizeof(ua_packet));
