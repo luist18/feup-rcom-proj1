@@ -25,7 +25,7 @@ char* build_app_control_packet(char control_byte, unsigned char type, unsigned c
 
 char* append_app_control_packet(char* buffer, unsigned char type, unsigned char size,
                                 char* data, int old_length, int* packet_length) {
-    unsigned int length = old_length + 3 + (unsigned int)size;
+    unsigned int length = old_length + 2 + (unsigned int)size;
 
     buffer = realloc(buffer, (int)length * sizeof(char));
 
