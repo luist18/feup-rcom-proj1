@@ -6,6 +6,7 @@
 #include <termios.h>
 
 #include "../data_link/data_link.h"
+#include "../app_layer/app_layer.h"
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
@@ -20,6 +21,11 @@ int main(int argc, char** argv) {
     int fd;
     if (fd = llopen(argv[1], RECEPTOR), fd < 0)
         exit(1);
+
+    if (receive_file(fd) < 0){
+        printf("Something went wrong while receiving the file!\n");
+        exit(3);
+    }
 
     if (llclose(fd, RECEPTOR) < 0)
         exit(2);
