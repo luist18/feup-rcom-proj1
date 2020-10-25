@@ -39,13 +39,13 @@ char* append_app_control_packet(char* buffer, unsigned char type, unsigned char 
     return buffer;
 }
 
-char* build_app_data_packet(char sequence_number, unsigned int size, char* data, unsigned int* packet_length) {
+char* build_app_data_packet(unsigned char sequence_number, unsigned int size, char* data, unsigned int* packet_length) {
     int length = 4 + size;
 
     char* packet = malloc(length);
 
     packet[0] = AL_CONTROL_DATA;
-    packet[1] = sequence_number % 255;
+    packet[1] = sequence_number % 256;
     packet[2] = size / 256;
     packet[3] = size % 256;
 

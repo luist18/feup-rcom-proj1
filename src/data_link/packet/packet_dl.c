@@ -16,92 +16,90 @@ control_packet build_control_packet(char address, char control) {
 }
 
 unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length) {
-    unsigned int new_length;
-
-    unsigned char *data_stuffed = stuff(data, length, &new_length);
-
-    unsigned char *packet = malloc(INFORMATION_PACKET_BASE_SIZE + new_length);
+    unsigned char *packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
+    unsigned char *stuffed_packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
 
     packet[0] = DELIMITER_FLAG;
     packet[1] = EMITTER_ADDRESS;
     packet[2] = sequence_number << 6;
     packet[3] = packet[2] ^ EMITTER_ADDRESS;
-    memcpy(&packet[4], data_stuffed, new_length);
-    packet[new_length + 4] = get_data_bcc(data, length);
-    packet[new_length + 5] = DELIMITER_FLAG;
+    memcpy(&packet[4], data, length);
+    packet[length + 4] = get_data_bcc(data, length);
+    packet[length + 5] = DELIMITER_FLAG;
 
-    *packet_length = new_length + 6;
+    unsigned int new_length = stuff(packet, stuffed_packet, INFORMATION_PACKET_BASE_SIZE + length);
 
-    return packet;
+    free(packet);
+
+    *packet_length = new_length;
+
+    return stuffed_packet;
 }
 
-unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length) {
-    unsigned char *stuffed_data = malloc(length * sizeof(char));
+unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int length) {
+    unsigned int new_length = (unsigned int)length;
+    int current_index = 1;
 
-    *new_length = 0;
-    unsigned int offset = 0;
+    packet[0] = data[0];
 
-    for (int i = 0; i < length; ++i) {
+    for (int i = 1; i < length - 1; ++i) {
         char byte = data[i];
 
         if (byte == DELIMITER_FLAG) {
-            stuffed_data[*new_length] = ESCAPE;
-            stuffed_data[(*new_length)++] = DELIMITER_FLAG ^ 0x20;
+            packet = realloc(packet, ++new_length);
 
-            offset++;
-
-            stuffed_data = realloc(stuffed_data, length + offset);
+            packet[current_index++] = ESCAPE;
+            packet[current_index] = DELIMITER_FLAG ^ 0x20;
         } else if (byte == ESCAPE) {
-            stuffed_data[*new_length] = ESCAPE;
-            stuffed_data[(*new_length)++] = ESCAPE ^ 0x20;
+            packet = realloc(packet, ++new_length);
 
-            offset++;
-
-            stuffed_data = realloc(stuffed_data, length + offset);
+            packet[current_index++] = ESCAPE;
+            packet[current_index] = ESCAPE ^ 0x20;
         } else {
-            stuffed_data[*new_length] = byte;
+            packet[current_index] = byte;
         }
 
-        (*new_length)++;
+        current_index++;
     }
 
-    return stuffed_data;
+    packet[current_index] = data[length - 1];
+
+    return new_length;
 }
 
 char *destuff(char *data, unsigned int length, unsigned int *new_length) {
-    char *destuffed_data = malloc(length * sizeof(char));
+    char *tmp = (char *)malloc(length * sizeof(char));
+    size_t tmp_size = 0;
+    int bytes_found = 0;
 
-    for (int i = 0; i < 4; i++)
-        destuffed_data[i] = data[i];
+    tmp[tmp_size++] = data[0];
 
-    char byte;
-
-    int current_index = 4;
-
-    for (int i = 4; i < length - 2; ++i, ++current_index) {
-        byte = data[i];
+    for (size_t i = 1; i < length - 1; i++) {
+        char byte = data[i];
 
         if (byte == ESCAPE) {
-            if (data[i + 1] == 0x5e) {
-                destuffed_data[current_index] = 0x7e;
-                i++;
-            } else if (data[i + 1] == 0x5d) {
-                destuffed_data[current_index] = ESCAPE;
-                i++;
+            char next_byte = data[i + 1];
+
+            if (next_byte == (DELIMITER_FLAG ^ 0x20)) {
+                tmp[tmp_size] = DELIMITER_FLAG;
+            } else if (next_byte == (ESCAPE ^ 0x20)) {
+                tmp[tmp_size] = ESCAPE;
             }
+
+            bytes_found++;
+
+            i++;
         } else {
-            destuffed_data[current_index] = byte;
+            tmp[tmp_size] = byte;
         }
+
+        tmp_size++;
     }
 
-    destuffed_data[current_index++] = data[length - 2];
-    destuffed_data[current_index++] = data[length - 1];
+    tmp[tmp_size++] = data[length - 1];
 
-    destuffed_data = realloc(destuffed_data, current_index * sizeof(char));
-
-    *new_length = current_index;
-
-    return destuffed_data;
+    *new_length = length - bytes_found;
+    return tmp;
 }
 
 unsigned char get_data_bcc(char *data, unsigned int length) {

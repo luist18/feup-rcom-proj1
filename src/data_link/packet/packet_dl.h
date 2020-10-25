@@ -26,15 +26,7 @@ control_packet build_control_packet(char address, char control);
 
 unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length);
 
-/**
- * @brief Stuffs data.
- * 
- * @param data              the data to stuff
- * @param length            the length of the data
- * @param new_length        the length of the stuffed data
- * @return unsigned char*   the stuffed data
- */
-unsigned char *stuff(char *data, unsigned int length, unsigned int *new_length);
+unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int length);
 
 char *destuff(char *data, unsigned int length, unsigned int *new_length);
 
