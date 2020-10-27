@@ -85,13 +85,14 @@ int read_control_packet(int fd, char *filename, long *file_length) {
     int bytes_read = llread(fd, buffer);
 
     int index = 1;
+
     while (index != bytes_read) {
         char type_byte = buffer[index++];
         char length = buffer[index++];
 
         if (type_byte == AL_TYPE_LENGTH) {
             char length_buffer[length];
-            strncpy(length_buffer, &buffer[index], length);
+            memcpy(length_buffer, &buffer[index], length);
 
             *file_length = array_to_length(length_buffer, length);
         } else if (type_byte == AL_TYPE_NAME) {
@@ -113,8 +114,8 @@ char *read_data_packet(int fd, unsigned int *data_length, unsigned char *sequenc
     llread(fd, buffer);
 
     unsigned char tmp_sequence_number = (unsigned char)buffer[1];
-    unsigned int l2 = (unsigned int)buffer[2];
-    unsigned int l1 = (unsigned int)buffer[3];
+    unsigned char l2 = (unsigned char)buffer[2];
+    unsigned char l1 = (unsigned char)buffer[3];
 
     *data_length = 256 * l2 + l1;
     *sequence_number = tmp_sequence_number;
@@ -164,22 +165,36 @@ int read_data_packets(int fd, char *filename, long file_length) {
 }
 
 int receive_file(int fd) {
-    char *filename = malloc(sizeof(char));
+    char *filename_start = malloc(sizeof(char));
     long file_length;
 
-    if (read_control_packet(fd, filename, &file_length) < 0)
+    if (read_control_packet(fd, filename_start, &file_length) < 0) {
+        free(filename_start);
         return -1;
+    }
 
     printf("Application start packet received.\n");
+    printf("\tFile size: %ld bytes\n\tFile name: %s\n", file_length, filename_start);
 
-    if (read_data_packets(fd, filename, file_length) < 0)
+    if (read_data_packets(fd, filename_start, file_length) < 0) {
+        free(filename_start);
         return -1;
+    }
+
+    free(filename_start);
 
     printf("Application data packets received.\n");
 
-    printf("Application end packet received.\n");
+    char *filename_end = malloc(sizeof(char));
 
-    free(filename);
+    if (read_control_packet(fd, filename_end, &file_length) < 0) {
+        free(filename_end);
+        return -1;
+    }
+
+    free(filename_end);
+
+    printf("Application end packet received.\n");
 
     return 0;
 }

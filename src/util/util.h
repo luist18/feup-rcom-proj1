@@ -9,4 +9,6 @@ long array_to_length(char *buffer, unsigned char size);
 
 void print_progress_bar(long bytes_sent, long file_length);
 
+void print_packet(char *message, char *packet, long size);
+
 #endif

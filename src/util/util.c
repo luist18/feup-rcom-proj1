@@ -93,3 +93,12 @@ void print_progress_bar(long bytes_sent, long file_length) {
     else
         printf("\r\033[K");
 }
+
+void print_packet(char *message, char *packet, long size) {
+    printf("%s", message);
+
+    for (int i = 0; i < size; ++i)
+        printf("%02x", (unsigned char)(packet[i]));
+
+    printf("\n");
+}

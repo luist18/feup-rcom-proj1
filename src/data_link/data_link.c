@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "../util/flags.h"
+#include "../util/util.h"
 #include "control/control.h"
 #include "packet/packet_dl.h"
 
@@ -140,11 +141,15 @@ int llread(int fd, char *buffer) {
     if (data_sequence_number == sequence_number && data_bcc2 == bcc2) {
         control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
 
+        print_packet("Packet received: ", destuffed_data, new_length);
+
         write(fd, &rr_packet, sizeof(rr_packet));
 
         sequence_number = !sequence_number;
     } else {
         control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
+
+        print_packet("Packet rejected: ", destuffed_data, new_length);
 
         write(fd, &rej_packet, sizeof(rej_packet));
 
@@ -153,11 +158,11 @@ int llread(int fd, char *buffer) {
         return llread(fd, buffer);
     }
 
-    memcpy(buffer, destuffed_data + 4, byte_count - 2);
+    memcpy(buffer, destuffed_data + 4, new_length - 2);
 
     free(destuffed_data);
 
-    return byte_count - INFORMATION_PACKET_BASE_SIZE;
+    return new_length - INFORMATION_PACKET_BASE_SIZE;
 }
 
 int llwrite(int filedes, char *data, int length) {
@@ -171,6 +176,8 @@ int llwrite(int filedes, char *data, int length) {
 
     do {
         write(filedes, &(*packet), packet_length);
+
+        print_packet("Packet sent: ", (char *)packet, packet_length);
 
         alarm(3);
 
