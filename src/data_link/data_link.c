@@ -116,32 +116,38 @@ int llread(int fd, char *buffer) {
 
     char byte;
 
+    char read_buffer[PACKET_SIZE];
+
     while (state != INFO_STOP) {
         read(fd, &byte, sizeof(byte));
 
-        buffer[byte_count++] = byte;
+        if (byte == ESCAPE) {
+            char next_byte;
+            read(fd, &next_byte, sizeof(byte));
 
-        buffer = realloc(buffer, byte_count + 1);
+            if (next_byte == (DELIMITER_FLAG ^ 0x20)) {
+                read_buffer[byte_count++] = DELIMITER_FLAG;
+            } else if (next_byte == (ESCAPE ^ 0x20)) {
+                read_buffer[byte_count++] = ESCAPE;
+            }
+        } else {
+            read_buffer[byte_count++] = byte;
+        }
 
         handle_state_receptor_information(&state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
     }
 
-    unsigned int new_length;
-    char *destuffed_data = destuff(buffer, byte_count, &new_length);
+    char data_bcc2 = read_buffer[byte_count - 2];
 
-    char data_bcc2 = destuffed_data[new_length - 2];
+    char bcc2 = read_buffer[4];
 
-    char bcc2 = destuffed_data[4];
+    for (int i = 5; i < byte_count - 2; ++i)
+        bcc2 ^= read_buffer[i];
 
-    for (int i = 5; i < new_length - 2; ++i)
-        bcc2 ^= destuffed_data[i];
-
-    int data_sequence_number = destuffed_data[2] >> 6;
+    int data_sequence_number = read_buffer[2] >> 6;
 
     if (data_sequence_number == sequence_number && data_bcc2 == bcc2) {
         control_packet rr_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_RR(sequence_number));
-
-        print_packet("Packet received: ", destuffed_data, new_length);
 
         write(fd, &rr_packet, sizeof(rr_packet));
 
@@ -149,20 +155,17 @@ int llread(int fd, char *buffer) {
     } else {
         control_packet rej_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_REJ(sequence_number));
 
-        print_packet("Packet rejected: ", destuffed_data, new_length);
+        print_packet("Packet rejected: ", read_buffer, byte_count);
 
         write(fd, &rej_packet, sizeof(rej_packet));
-
-        free(destuffed_data);
 
         return llread(fd, buffer);
     }
 
-    memcpy(buffer, destuffed_data + 4, new_length - 2);
+    for (int i = 4; i < byte_count - 1; ++i)
+        buffer[i - 4] = read_buffer[i];
 
-    free(destuffed_data);
-
-    return new_length - INFORMATION_PACKET_BASE_SIZE;
+    return byte_count - INFORMATION_PACKET_BASE_SIZE;
 }
 
 int llwrite(int filedes, char *data, int length) {
@@ -176,8 +179,6 @@ int llwrite(int filedes, char *data, int length) {
 
     do {
         write(filedes, &(*packet), packet_length);
-
-        print_packet("Packet sent: ", (char *)packet, packet_length);
 
         alarm(3);
 

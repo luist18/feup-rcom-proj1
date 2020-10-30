@@ -43,9 +43,11 @@
 #define AL_TYPE_LENGTH 0x00
 #define AL_TYPE_NAME 0x01
 
-#define AL_PACKET_SIZE 250
+#define AL_PACKET_SIZE 4000000
 
 #define AL_DATA_PACKET_BASE_SIZE 4 * sizeof(char)
+
+#define PACKET_SIZE AL_PACKET_SIZE + AL_DATA_PACKET_BASE_SIZE + INFORMATION_PACKET_BASE_SIZE
 
 /**
  * END - App layer configuration.

@@ -109,9 +109,8 @@ int read_control_packet(int fd, char *filename, long *file_length) {
     return 0;
 }
 
-char *read_data_packet(int fd, unsigned int *data_length, unsigned char *sequence_number) {
-    char *buffer = malloc(sizeof(char));
-    llread(fd, buffer);
+int read_data_packet(int fd, char *buffer, unsigned int *data_length, unsigned char *sequence_number) {
+    int bytes_read = llread(fd, buffer);
 
     unsigned char tmp_sequence_number = (unsigned char)buffer[1];
     unsigned char l2 = (unsigned char)buffer[2];
@@ -120,10 +119,9 @@ char *read_data_packet(int fd, unsigned int *data_length, unsigned char *sequenc
     *data_length = 256 * l2 + l1;
     *sequence_number = tmp_sequence_number;
 
-    buffer = realloc(buffer, *data_length);
     memcpy(buffer, &buffer[4], *data_length);
 
-    return buffer;
+    return bytes_read;
 }
 
 int read_data_packets(int fd, char *filename, long file_length) {
@@ -138,7 +136,12 @@ int read_data_packets(int fd, char *filename, long file_length) {
 
     while (total_bytes_read != file_length) {
         unsigned char tmp_sequence_number;
-        char *data = read_data_packet(fd, &data_bytes_read, &tmp_sequence_number);
+
+        char data[PACKET_SIZE];
+
+        read_data_packet(fd, data, &data_bytes_read, &tmp_sequence_number);
+
+        total_bytes_read += data_bytes_read;
 
         if (sequence_number != tmp_sequence_number) {
             fclose(file);
@@ -147,11 +150,10 @@ int read_data_packets(int fd, char *filename, long file_length) {
 
         fwrite(data, data_bytes_read, 1, file);
 
-        free(data);
         sequence_number++;
         sequence_number %= 256;
 
-        total_bytes_read += data_bytes_read;
+        print_progress_bar(total_bytes_read, file_length);
 
         ++i;
     }

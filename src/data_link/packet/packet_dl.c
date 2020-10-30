@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "../../util/flags.h"
+#include "../../util/util.h"
 
 control_packet build_control_packet(char address, char control) {
     control_packet packet = {.I_FLAG = DELIMITER_FLAG,
@@ -65,41 +66,6 @@ unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int leng
     packet[current_index] = data[length - 1];
 
     return new_length;
-}
-
-char *destuff(char *data, unsigned int length, unsigned int *new_length) {
-    char *tmp = (char *)malloc(length * sizeof(char));
-    size_t tmp_size = 0;
-    int bytes_found = 0;
-
-    tmp[tmp_size++] = data[0];
-
-    for (size_t i = 1; i < length - 1; i++) {
-        char byte = data[i];
-
-        if (byte == ESCAPE) {
-            char next_byte = data[i + 1];
-
-            if (next_byte == (DELIMITER_FLAG ^ 0x20)) {
-                tmp[tmp_size] = DELIMITER_FLAG;
-            } else if (next_byte == (ESCAPE ^ 0x20)) {
-                tmp[tmp_size] = ESCAPE;
-            }
-
-            bytes_found++;
-
-            i++;
-        } else {
-            tmp[tmp_size] = byte;
-        }
-
-        tmp_size++;
-    }
-
-    tmp[tmp_size++] = data[length - 1];
-
-    *new_length = length - bytes_found;
-    return tmp;
 }
 
 unsigned char get_data_bcc(char *data, unsigned int length) {

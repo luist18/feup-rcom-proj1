@@ -102,3 +102,10 @@ void print_packet(char *message, char *packet, long size) {
 
     printf("\n");
 }
+
+void print_packet_information(int packet_size, int packet_number, long total_bytes) {
+    printf("Sending packet...\n");
+    printf("\tPacket sequence number: %d\n", packet_number);
+    printf("\tPacket size: %d\n", packet_size);
+    printf("\tTotal bytes sent: %ld\n", total_bytes);
+}

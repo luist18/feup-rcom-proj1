@@ -28,8 +28,6 @@ unsigned char *build_information_packet(char *data, unsigned int length, unsigne
 
 unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int length);
 
-char *destuff(char *data, unsigned int length, unsigned int *new_length);
-
 unsigned char get_data_bcc(char *data, unsigned int length);
 
 #endif

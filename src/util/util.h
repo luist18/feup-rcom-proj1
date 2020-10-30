@@ -11,4 +11,6 @@ void print_progress_bar(long bytes_sent, long file_length);
 
 void print_packet(char *message, char *packet, long size);
 
+void print_packet_information(int packet_size, int packet_number, long total_bytes);
+
 #endif
