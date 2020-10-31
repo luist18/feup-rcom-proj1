@@ -10,7 +10,7 @@
 
 #define MAX_TIMEOUT_RETRIES 3
 
-#define BAUDRATE B38400
+#define BAUDRATE 78000
 
 #define DELIMITER_FLAG 0x7e
 #define ESCAPE 0x7d
@@ -43,7 +43,7 @@
 #define AL_TYPE_LENGTH 0x00
 #define AL_TYPE_NAME 0x01
 
-#define AL_PACKET_SIZE 4000000
+#define AL_PACKET_SIZE 3000
 
 #define AL_DATA_PACKET_BASE_SIZE 4 * sizeof(char)
 

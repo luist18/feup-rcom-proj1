@@ -68,7 +68,7 @@ const char *progress_bar_chars[] = {
     "▉",
     "█"};
 
-void print_progress_bar(long bytes_sent, long file_length) {
+void print_progress_bar(long bytes_sent, long file_length, time_t start_time) {
     float progress = bytes_sent * 1.0f / file_length;
 
     int bar_number = progress / (2.5f / 100.0f);
@@ -84,7 +84,13 @@ void print_progress_bar(long bytes_sent, long file_length) {
     for (int i = 0; i < 40 - bar_number; ++i)
         printf(" ");
 
-    printf("] %6.2f %% ", progress * 100.0f);
+    double elapsed = ((double)(time(NULL) - start_time));
+
+    double velocity = bytes_sent * 1.0 / elapsed;
+
+    double eta = (file_length - bytes_sent) * 1.0 / velocity;
+
+    printf("] %6.2f %% %.1f kB/sec %.1fs remaining  ", progress * 100.0f, velocity / 1024.0f, eta);
 
     fflush(stdout);
 

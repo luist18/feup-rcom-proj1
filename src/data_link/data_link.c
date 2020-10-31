@@ -119,7 +119,12 @@ int llread(int fd, char *buffer) {
     char read_buffer[PACKET_SIZE];
 
     while (state != INFO_STOP) {
+        if (state == INFO_START)
+            byte_count = 0;
+
         read(fd, &byte, sizeof(byte));
+
+        handle_state_receptor_information(&state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
 
         if (byte == ESCAPE) {
             char next_byte;
@@ -133,8 +138,6 @@ int llread(int fd, char *buffer) {
         } else {
             read_buffer[byte_count++] = byte;
         }
-
-        handle_state_receptor_information(&state, &byte, EMITTER_ADDRESS, INFO_SEQUENCE(sequence_number));
     }
 
     char data_bcc2 = read_buffer[byte_count - 2];

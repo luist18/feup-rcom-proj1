@@ -41,6 +41,8 @@ int send_data_packets(int fd, char *filename, long file_length) {
 
     char buffer[AL_PACKET_SIZE];
 
+    time_t start_time = time(NULL);
+
     int content_size = file_length < AL_PACKET_SIZE ? file_length : AL_PACKET_SIZE;
     while (bytes_sent != file_length) {
         if (bytes_sent + content_size > file_length)
@@ -56,7 +58,7 @@ int send_data_packets(int fd, char *filename, long file_length) {
 
         bytes_sent += content_size;
 
-        print_progress_bar(bytes_sent, file_length);
+        print_progress_bar(bytes_sent, file_length, start_time);
     }
 
     return 0;
@@ -134,6 +136,8 @@ int read_data_packets(int fd, char *filename, long file_length) {
 
     int i = 0;
 
+    time_t start_time = time(NULL);
+
     while (total_bytes_read != file_length) {
         unsigned char tmp_sequence_number;
 
@@ -153,7 +157,7 @@ int read_data_packets(int fd, char *filename, long file_length) {
         sequence_number++;
         sequence_number %= 256;
 
-        print_progress_bar(total_bytes_read, file_length);
+        print_progress_bar(total_bytes_read, file_length, start_time);
 
         ++i;
     }
