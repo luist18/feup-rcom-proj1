@@ -128,7 +128,7 @@ int llread(int fd, char *buffer) {
 
         if (byte == ESCAPE) {
             char next_byte;
-            read(fd, &next_byte, sizeof(byte));
+            read(fd, &next_byte, sizeof(next_byte));
 
             if (next_byte == (DELIMITER_FLAG ^ 0x20)) {
                 read_buffer[byte_count++] = DELIMITER_FLAG;
@@ -300,6 +300,8 @@ int llclose(int fd, enum open_type open_type) {
         default:
             return -1;
     }
+
+    sleep(1);
 
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
