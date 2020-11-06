@@ -166,5 +166,10 @@ void alarm_handler(int sig) {
 }
 
 void setup_handler() {
-    (void)signal(SIGALRM, alarm_handler);
+    struct sigaction action;
+    action.sa_handler = alarm_handler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+
+    sigaction(SIGALRM, &action, NULL);
 }

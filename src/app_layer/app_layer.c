@@ -121,7 +121,7 @@ int read_data_packet(int fd, char *buffer, unsigned int *data_length, unsigned c
     *data_length = 256 * l2 + l1;
     *sequence_number = tmp_sequence_number;
 
-    memcpy(buffer, &buffer[4], *data_length);
+    memcpy(buffer, &(buffer[4]), *data_length);
 
     return bytes_read;
 }

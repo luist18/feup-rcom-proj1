@@ -166,8 +166,7 @@ int llread(int fd, char *buffer) {
         return llread(fd, buffer);
     }
 
-    for (int i = 4; i < byte_count - 1; ++i)
-        buffer[i - 4] = read_buffer[i];
+    memcpy(buffer, &(read_buffer[4]), byte_count - INFORMATION_PACKET_BASE_SIZE);
 
     return byte_count - INFORMATION_PACKET_BASE_SIZE;
 }
