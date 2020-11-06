@@ -178,7 +178,7 @@ int llwrite(int filedes, char *data, int length) {
     enum STATE control;
 
     unsigned int packet_length;
-    unsigned char *packet = build_information_packet(data, length, sequence_number, &packet_length);
+    char *packet = build_information_packet(data, length, sequence_number, &packet_length);
 
     do {
         write(filedes, &(*packet), packet_length);

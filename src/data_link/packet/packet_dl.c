@@ -16,9 +16,9 @@ control_packet build_control_packet(char address, char control) {
     return packet;
 }
 
-unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length) {
-    unsigned char *packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
-    unsigned char *stuffed_packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
+char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length) {
+    char *packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
+    char *stuffed_packet = malloc(INFORMATION_PACKET_BASE_SIZE + length);
 
     packet[0] = DELIMITER_FLAG;
     packet[1] = EMITTER_ADDRESS;
@@ -37,7 +37,7 @@ unsigned char *build_information_packet(char *data, unsigned int length, unsigne
     return stuffed_packet;
 }
 
-unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int length) {
+unsigned int stuff(char *data, char *packet, unsigned int length) {
     unsigned int new_length = (unsigned int)length;
     int current_index = 1;
 

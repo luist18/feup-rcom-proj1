@@ -24,9 +24,9 @@ typedef struct control_packet {
  */
 control_packet build_control_packet(char address, char control);
 
-unsigned char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length);
+char *build_information_packet(char *data, unsigned int length, unsigned int sequence_number, unsigned int *packet_length);
 
-unsigned int stuff(unsigned char *data, unsigned char *packet, unsigned int length);
+unsigned int stuff(char *data, char *packet, unsigned int length);
 
 unsigned char get_data_bcc(char *data, unsigned int length);
 

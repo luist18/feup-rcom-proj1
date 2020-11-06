@@ -152,7 +152,7 @@ int read_data_packets(int fd, char *filename, long file_length) {
             return -1;
         }
 
-        fwrite(data, data_bytes_read, 1, file);
+        fwrite(data, sizeof(char), data_bytes_read, file);
 
         sequence_number++;
         sequence_number %= 256;
