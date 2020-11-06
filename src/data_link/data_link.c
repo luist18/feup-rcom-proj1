@@ -42,7 +42,7 @@ int llopen(char *port, enum open_type open_type) {
             newtio.c_lflag = 0;
 
             newtio.c_cc[VTIME] = 0;
-            newtio.c_cc[VMIN] = 0;
+            newtio.c_cc[VMIN] = 1;
 
             tcflush(fd, TCIOFLUSH);
 
@@ -83,7 +83,7 @@ int llopen(char *port, enum open_type open_type) {
             newtio.c_lflag = 0;
 
             newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-            newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+            newtio.c_cc[VMIN] = 1;  /* blocking read until 5 chars received */
 
             tcflush(fd, TCIOFLUSH);
 
@@ -99,8 +99,9 @@ int llopen(char *port, enum open_type open_type) {
 
             return_code = fd;
 
-            break;
+            printf("Connection established.\n");
 
+            break;
         default:
             return_code = -1;
             break;
@@ -314,7 +315,7 @@ int llclose(int fd, enum open_type open_type) {
 }
 
 int llopen_receptor(int filedes) {
-    printf("Awaiting connection establishment from receptor...\n");
+    printf("Awaiting connection establishment from emitter...\n");
 
     retries = 0;
 
@@ -332,8 +333,6 @@ int llopen_receptor(int filedes) {
         printf("Connection failed. No valid SET packet was received!\n");
         return -1;
     }
-
-    printf("Connection established.\n");
 
     control_packet ua_packet = build_control_packet(EMITTER_ADDRESS, CONTROL_UA);
     write(filedes, &ua_packet, sizeof(ua_packet));

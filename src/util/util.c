@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 char *length_to_array(long file_length, unsigned char *size) {
     long bl = file_length & 0xFFFFFFFF00000000;
@@ -68,7 +69,7 @@ const char *progress_bar_chars[] = {
     "▉",
     "█"};
 
-void print_progress_bar(long bytes_sent, long file_length, time_t start_time) {
+void print_progress_bar(long bytes_sent, long file_length, double start_time) {
     float progress = bytes_sent * 1.0f / file_length;
 
     int bar_number = progress / (2.5f / 100.0f);
@@ -84,7 +85,7 @@ void print_progress_bar(long bytes_sent, long file_length, time_t start_time) {
     for (int i = 0; i < 40 - bar_number; ++i)
         printf(" ");
 
-    double elapsed = ((double)(time(NULL) - start_time));
+    double elapsed = get_current_time() - start_time;
 
     double velocity = bytes_sent * 1.0 / elapsed;
 
@@ -114,4 +115,16 @@ void print_packet_information(int packet_size, int packet_number, long total_byt
     printf("\tPacket sequence number: %d\n", packet_number);
     printf("\tPacket size: %d\n", packet_size);
     printf("\tTotal bytes sent: %ld\n", total_bytes);
+}
+
+double get_current_time() {
+    long int ns;
+    time_t sec;
+    struct timespec spec;
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+    sec = spec.tv_sec;
+    ns = spec.tv_nsec;
+
+    return (double)((unsigned int)sec * 1000000000L + (unsigned int)ns) / 1000000000.0f;
 }

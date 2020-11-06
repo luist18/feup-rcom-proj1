@@ -41,7 +41,7 @@ int send_data_packets(int fd, char *filename, long file_length) {
 
     char buffer[AL_PACKET_SIZE];
 
-    time_t start_time = time(NULL);
+    double start_time = get_current_time();
 
     int content_size = file_length < AL_PACKET_SIZE ? file_length : AL_PACKET_SIZE;
     while (bytes_sent != file_length) {
@@ -136,7 +136,7 @@ int read_data_packets(int fd, char *filename, long file_length) {
 
     int i = 0;
 
-    time_t start_time = time(NULL);
+    double start_time = get_current_time();
 
     while (total_bytes_read != file_length) {
         unsigned char tmp_sequence_number;
