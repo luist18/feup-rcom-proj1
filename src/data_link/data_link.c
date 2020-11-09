@@ -183,7 +183,7 @@ int llwrite(int filedes, char *data, int length) {
     do {
         write(filedes, &(*packet), packet_length);
 
-        alarm(3);
+        alarm(5);
 
         char byte;
 
@@ -351,7 +351,7 @@ int llopen_emitter(int filedes) {
     do {
         write(filedes, &packet, sizeof(packet));
 
-        alarm(3);
+        alarm(5);
 
         char byte;
 

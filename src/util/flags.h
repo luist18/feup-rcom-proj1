@@ -10,7 +10,7 @@
 
 #define MAX_TIMEOUT_RETRIES 3
 
-#define BAUDRATE 78000
+#define BAUDRATE B38400
 
 #define DELIMITER_FLAG 0x7e
 #define ESCAPE 0x7d

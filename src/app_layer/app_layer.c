@@ -165,6 +165,8 @@ int read_data_packets(int fd, char *filename, long file_length) {
     if (total_bytes_read != file_length)
         return -1;
 
+    printf("Total time elapsed: %.4fs\n", get_current_time() - start_time);
+
     fclose(file);
 
     return 0;
