@@ -232,7 +232,7 @@ int llclose(int fd, enum open_type open_type) {
                 write(fd, &packet, sizeof(packet));
                 printf("Terminating connection with receptor...\n");
 
-                alarm(3);
+                alarm(5);
 
                 char byte;
 
